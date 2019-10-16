@@ -1,8 +1,15 @@
+import pandas
+
+with open("NaviDictionary.tsv", "r") as f:
+    dict_text = [line.split('\t') for line in f.read().split('\n')]
+dictionary = pandas.DataFrame(dict_text, columns=["Na'vi", "English", "POS"])
+
+
 class Word:
-    def __init__(self, info):
-        self.nav = info[0]
-        self.eng = info[1]
-        self.pos = info[2]
+    def __init__(self, word):
+        self.nav = word
+        self.eng = None
+        self.pos = None
 
     def __str__(self):
         return self.nav
