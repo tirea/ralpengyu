@@ -12,14 +12,15 @@ class Word:
         self.pos = pos
 
     def __str__(self):
-        return self.nav
+        return f"{self.nav} ({self.pos})"
 
 
 class Verb(Word):
     def __init__(self, nav, eng, pos):
         super().__init__(nav, eng, pos)
+        self.vtr = 't' in self.pos
         self.subj = None
-        if pos in {"vtr.", "vtrm."}:
+        if self.vtr:
             self.do = None
         self.ido = None
         self.adv = []
@@ -27,7 +28,8 @@ class Verb(Word):
     def __str__(self):
         out = super().__str__()
         out += f"\n   -- subject: {self.subj}"
-        out += f"\n   -- direct: {self.do}"
+        if self.vtr:
+            out += f"\n   -- direct: {self.do}"
         out += f"\n   -- indirect: {self.ido}"
         for a in self.adv:
             out += f"\n   -- adverb: {a}"

@@ -15,11 +15,12 @@ def update():
         'Connection': 'keep-alive'}
     req = urllib.request.Request(site, headers=hdr)
     text = urllib.request.urlopen(req).read()
+    print(text)
     with open("NaviDictionaryUpdate.tsv", "w") as f_new:
-        f_new.write(text)
+        f_new.write(text.decode())
 
 
-with open("NaviDictionary.tsv", "r") as f:
+with open("NaviDictionaryUpdate.tsv", "r") as f:
     dict_text = [line.split('\t') for line in f.read().split('\n')]
 total_words = len(dict_text)
 dictionary = pandas.DataFrame(dict_text, columns=["Na'vi", "English", "POS"])
@@ -76,18 +77,19 @@ def clause(words):
         if type(w) == word_types.Verb:
             verb = w
             break
+    words.remove(verb)
     if verb is None:
         raise ValueError(f"No verb found in {words}")
     for w in words:
         if type(w) == word_types.Noun:
-            if w.case in {"l", "ìl", }:
+            if (w.case in {"l", "ìl", } and verb.vtr) or (not w.case and not verb.vtr):
                 verb.subj = w
-            if w.case in {"t", "it", "ti", }:
+            if w.case in {"t", "it", "ti", } and verb.vtr:
                 verb.do = w
             if w.case in {"r", "ur", "ru", }:
                 verb.ido = w
             else:
-                verb.subj = w
+                raise ValueError(f"Could not account for {w}")
                 break
     return verb
 
@@ -102,6 +104,7 @@ def main():
             break
         if line in ("update",):
             update()
+            continue
 
         words = line.split()
 
