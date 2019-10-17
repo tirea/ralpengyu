@@ -61,7 +61,6 @@ def process(word):
     nav = line["Na'vi"]
     eng = line["English"]
     pos = line["POS"]
-    print(breakdown)
     if pos in {"v.", "vin.", "vtr.", "vinm.", "vtrm.", }:
         return word_types.Verb(nav, eng, pos)
     if pos in {"n.", "pn.", }:
@@ -84,13 +83,12 @@ def clause(words):
         if type(w) == word_types.Noun:
             if (w.case in {"l", "ìl", } and verb.vtr) or (not w.case and not verb.vtr):
                 verb.subj = w
-            if w.case in {"t", "it", "ti", } and verb.vtr:
+            elif w.case in {"t", "it", "ti", } and verb.vtr:
                 verb.do = w
-            if w.case in {"r", "ur", "ru", }:
+            elif w.case in {"r", "ur", "ru", }:
                 verb.ido = w
             else:
                 raise ValueError(f"Could not account for {w}")
-                break
     return verb
 
 
@@ -104,16 +102,14 @@ def main():
             break
         if line in ("update",):
             update()
-            continue
+            print("Updated, please restart to load changes")
+            return
 
-        words = line.split()
-
-        # rows = [get_row(w)[0] for w in words]
-        # print(rows)
-        # print(dictionary.iloc[rows, :])
-
-        words = [process(w) for w in words]
-        print(clause(words))
+        try:
+            words = [process(w) for w in line.split()]
+            print(clause(words))
+        except ValueError as e:
+            print(e)
 
 
 if __name__ == '__main__':
