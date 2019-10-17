@@ -19,7 +19,8 @@ class Verb(Word):
     def __init__(self, nav, eng, pos):
         super().__init__(nav, eng, pos)
         self.subj = None
-        self.do = None
+        if pos in {"vtr.", "vtrm."}:
+            self.do = None
         self.ido = None
         self.adv = []
 
@@ -34,12 +35,13 @@ class Verb(Word):
 
 
 class Noun(Word):
-    def __init__(self, nav, eng, pos):
+    def __init__(self, nav, eng, pos, case):
         super().__init__(nav, eng, pos)
+        self.case = case
         self.adj = []
 
     def __str__(self):
-        out = super().__str__()
+        out = super().__str__() + f" -{self.case}"
         for a in self.adj:
             out += f"   -- adverb: {a}"
         return out

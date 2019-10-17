@@ -24,35 +24,50 @@ with open("NaviDictionary.tsv", "r") as f:
 total_words = len(dict_text)
 dictionary = pandas.DataFrame(dict_text, columns=["Na'vi", "English", "POS"])
 
-
-def get_pos(word):
-    return dictionary.loc[dictionary["Na'vi"] == word, "POS"].values[0]
-
-
-def get_row(word):
-    return dictionary.index.values[dictionary["Na'vi"] == word]
+suffixes = {
+    "t", "it", "ti",
+    "l", "ìl",
+    "r", "ur", "ru",
+}
 
 
-def is_base(word, entry):
-    if entry == word:
-        return True
-    if not entry:
-        return False
-    if word[0] == entry[0]:
-        return is_base(word[1:], entry[1:])
-    else:
-        return is_base(word[1:], entry)
+def affix_split(word, base):
+    if not base:
+        return []
+    affixes = word.split(base)
+    out = [base]
+    for a in affixes:
+        if not a:
+            continue
+        elif a in suffixes:
+            out.append(a)
+        else:
+            return []
+    return out
 
 
 def process(word):
-    line = dictionary.loc[dictionary["Na'vi"] == word]
-    nav = line["Na'vi"].values[0]
-    eng = line["English"].values[0]
-    pos = line["POS"].values[0]
-    if pos in ("v.", "vin.", "vtr.", "vinm.", "vtrm.", ):
+    breakdown = [word]
+    line = None
+    for row in range(total_words):
+        # print(dictionary["Na'vi"].values[row])
+        breakdown = affix_split(word, dictionary["Na'vi"].values[row])
+        if breakdown:
+            line = dictionary.iloc[row]
+            break
+    if line is None:
+        raise ValueError(f"Could not process {word}")
+    nav = line["Na'vi"]
+    eng = line["English"]
+    pos = line["POS"]
+    print(breakdown)
+    if pos in {"v.", "vin.", "vtr.", "vinm.", "vtrm.", }:
         return word_types.Verb(nav, eng, pos)
-    if pos in ("n.", "pn.", ):
-        return word_types.Noun(nav, eng, pos)
+    if pos in {"n.", "pn.", }:
+        if len(breakdown) <= 1:
+            return word_types.Noun(nav, eng, pos, "")
+        else:
+            return word_types.Noun(nav, eng, pos, breakdown[1])
 
 
 def clause(words):
@@ -65,8 +80,15 @@ def clause(words):
         raise ValueError(f"No verb found in {words}")
     for w in words:
         if type(w) == word_types.Noun:
-            verb.do = w
-            break
+            if w.case in {"l", "ìl", }:
+                verb.subj = w
+            if w.case in {"t", "it", "ti", }:
+                verb.do = w
+            if w.case in {"r", "ur", "ru", }:
+                verb.ido = w
+            else:
+                verb.subj = w
+                break
     return verb
 
 
